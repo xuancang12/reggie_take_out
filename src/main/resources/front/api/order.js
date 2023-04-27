@@ -1,7 +1,8 @@
  //提交订单
 function  addOrderApi(data){
     return $axios({
-        'url': '/order/submit',
+        // 'url': '/order/submit',
+        'url': '/payOrder',
         'method': 'post',
         data
       })
