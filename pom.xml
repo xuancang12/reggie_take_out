@@ -14,6 +14,7 @@
     <version>1.0-SNAPSHOT</version>
     <properties>
         <java.version>1.8</java.version>
+        <alipay.version>4.9.153.ALL</alipay.version>
     </properties>
     <dependencies>
         <!--阿里云短信服务-->
@@ -23,12 +24,13 @@
             <version>4.5.16</version>
         </dependency>
 
-        <!--阿里支付宝服务-->
+        <!--支付宝依赖-->
         <dependency>
             <groupId>com.alipay.sdk</groupId>
             <artifactId>alipay-sdk-java</artifactId>
-            <version>4.9.100.ALL</version>
+            <version>${alipay.version}</version>
         </dependency>
+
 
         <dependency>
             <groupId>com.aliyun</groupId>

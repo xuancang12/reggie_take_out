@@ -47,7 +47,7 @@ public class UserController {
             log.info("code={}",code);
 
             //调用阿里云提供的短信服务API完成发送短信
-            //SMSUtils.sendMessage("瑞吉外卖","",phone,code);
+            //SMSUtils.sendMessage("来亿碗外卖","",phone,code);
 
             SmsComponent smsComponent = new SmsComponent();
             //boolean b = smsComponent.sendMsm(phone, code, 10);
@@ -82,16 +82,12 @@ public class UserController {
         //获取验证码
         String code = map.get("code").toString();
 
-        //从Session中获取保存的验证码
-        //Object codeInSession = session.getAttribute(phone);
-
         //从Redis中获取缓存的验证码
         Object codeInSession = redisTemplate.opsForValue().get(phone);
 
         //进行验证码的比对（页面提交的验证码和Session中保存的验证码比对）
         if(codeInSession != null && codeInSession.equals(code)){
             //如果能够比对成功，说明登录成功
-
             LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
             queryWrapper.eq(User::getPhone,phone);
 
@@ -107,7 +103,6 @@ public class UserController {
 
             //如果用户登录成功，删除Redis缓存中的验证码
             redisTemplate.delete(phone);
-
             return R.success(user);
         }
         return R.error("登录失败");

@@ -125,16 +125,14 @@ public class EmployeeController {
     }
 
     /**
-     * 根据id修改员工信息
+     * 启用禁用根据id修改员工信息
      * @param employee
      * @return
      */
     @PutMapping
-    public R<String> update(HttpServletRequest request,@RequestBody Employee employee){
+    public R<String> update(@RequestBody Employee employee){
         log.info(employee.toString());
 
-        long id = Thread.currentThread().getId();
-        log.info("线程id为：{}",id);
         //Long empId = (Long)request.getSession().getAttribute("employee");
         //employee.setUpdateTime(LocalDateTime.now());
         //employee.setUpdateUser(empId);

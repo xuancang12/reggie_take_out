@@ -87,7 +87,7 @@
         <!-- 引入组件库 -->
         <script src="../../backend/plugins/element-ui/index.js"></script>
         <!-- 引入vant样式 -->
-        <script src="./../js/vant.min.js"></script>      
+        <script src="./../js/vant.min.js"></script>
         <script src="./../api/address.js"></script>
         <!-- 引入axios -->
         <script src="../../backend/plugins/axios/axios.min.js"></script>
@@ -116,7 +116,7 @@
                     goodsNum(){
                         let num = 0
                         this.cartData.forEach(item=>{
-                            num += item.number 
+                            num += item.number
                         })
                         if(num <99){
                             return num
@@ -193,14 +193,24 @@
                         }
                         console.log(this.params)
                         const res = await addOrderApi(params)
+// 关键代码，用于处理sb支付宝返回的数据，以下代码会开一个新页面用于支付
+                        //重点是下面这段代码，后端返回的form表单通过下面的代码展现在页面上，就是调起的支付宝支付页面。
 
-                        if(res.code === 1){
-                            window.requestAnimationFrame(()=>{
-                                window.location.replace('/front/page/pay-success.html')
-                            })
-                        }else{
-                            this.$notify({ type:'warning', message:res.msg});
-                        }
+                            var form = res.data;
+                            const div = document.createElement('div')//创建div
+                            div.innerHTML = form//将返回的form 放入div
+                            document.body.appendChild(div);
+                            document.forms[0].submit();
+
+                    // document.querySelector("body").innerHTML = res.data; // 查找到当前页面的body，将后台返回的form替换掉他的内容
+                        // document.forms[0].submit(); // 执行submit表单提交，让页面重定向，跳转到支付宝页面
+                        // if(res.code === 1){
+                        //     window.requestAnimationFrame(()=>{
+                        //         window.location.replace('/front/page/pay-success.html')
+                        //     })
+                        // }else{
+                        //     this.$notify({ type:'warning', message:res.msg});
+                        // }
                     },
                     //网络图片路径转换
                     imgPathConvert(path){
