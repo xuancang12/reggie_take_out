@@ -3,12 +3,15 @@ package com.lywtakeout.takeout.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.IdWorker;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.lywtakeout.takeout.common.BaseContext;
 import com.lywtakeout.takeout.common.CustomException;
+import com.lywtakeout.takeout.dto.DishDto;
 import com.lywtakeout.takeout.entity.*;
 import com.lywtakeout.takeout.mapper.OrderMapper;
 import com.lywtakeout.takeout.service.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,104 +38,29 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
     @Autowired
     private OrderDetailService orderDetailService;
 
+    @Autowired
+    private DishService dishService;
+
+    @Autowired
+    private RedisTemplate redisTemplate;
     /**
      * 用户下单
      * @param orders
      */
-    @Transactional
-    public void submit(Orders orders ,HttpSession session) {
-        //获得当前用户id
-        //Long userId = BaseContext.getCurrentId();
-        Long userId = (long)session.getAttribute("user");
-
-        //查询当前用户的购物车数据
-        LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ShoppingCart::getUserId,userId);
-        List<ShoppingCart> shoppingCarts = shoppingCartService.list(wrapper);
-
-        if(shoppingCarts == null || shoppingCarts.size() == 0){
-            throw new CustomException("购物车为空，不能下单");
-        }
-
-        //查询用户数据
-        User user = userService.getById(userId);
-        System.out.println(user);
-
-        System.out.println("-------------");
-        log.info("userid: {}", userId);
-
-        //查询地址数据
-        Long addressBookId = orders.getAddressBookId();
-        AddressBook addressBook = addressBookService.getById(addressBookId);
-        if(addressBook == null){
-            throw new CustomException("用户地址信息有误，不能下单");
-        }
-
-        long orderId = IdWorker.getId();//订单号
-
-        AtomicInteger amount = new AtomicInteger(0);
-
-        List<OrderDetail> orderDetails = shoppingCarts.stream().map((item) -> {
-            OrderDetail orderDetail = new OrderDetail();
-            orderDetail.setOrderId(orderId);
-            orderDetail.setNumber(item.getNumber());
-            orderDetail.setDishFlavor(item.getDishFlavor());
-            orderDetail.setDishId(item.getDishId());
-            orderDetail.setSetmealId(item.getSetmealId());
-            orderDetail.setName(item.getName());
-            orderDetail.setImage(item.getImage());
-            orderDetail.setAmount(item.getAmount());
-            amount.addAndGet(item.getAmount().multiply(new BigDecimal(item.getNumber())).intValue());
-            return orderDetail;
-        }).collect(Collectors.toList());
-
-
-        orders.setId(orderId);
-        orders.setOrderTime(LocalDateTime.now());
-        orders.setCheckoutTime(LocalDateTime.now());
-        orders.setStatus(2);
-        orders.setAmount(new BigDecimal(amount.get()));//总金额
-        orders.setUserId(userId);
-        orders.setNumber(String.valueOf(orderId));
-        orders.setUserName(user.getName());
-        orders.setConsignee(addressBook.getConsignee());
-        orders.setPhone(addressBook.getPhone());
-        orders.setAddress((addressBook.getProvinceName() == null ? "" : addressBook.getProvinceName())
-                + (addressBook.getCityName() == null ? "" : addressBook.getCityName())
-                + (addressBook.getDistrictName() == null ? "" : addressBook.getDistrictName())
-                + (addressBook.getDetail() == null ? "" : addressBook.getDetail()));
-        //向订单表插入数据，一条数据
-        this.save(orders);
-
-        //向订单明细表插入数据，多条数据
-        orderDetailService.saveBatch(orderDetails);
-
-        //清空购物车数据
-        shoppingCartService.remove(wrapper);
-    }
-
     @Override
     @Transactional
     public PayVo getOrderPay(Orders orders, HttpSession session) {
         //获得当前用户id
-        //Long userId = BaseContext.getCurrentId();
-        Long userId = (long)session.getAttribute("user");
+        Long userId = BaseContext.getCurrentId();
+        //Long userId = (long)session.getAttribute("user");
 
         //查询当前用户的购物车数据
         LambdaQueryWrapper<ShoppingCart> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ShoppingCart::getUserId,userId);
         List<ShoppingCart> shoppingCarts = shoppingCartService.list(wrapper);
 
-        if(shoppingCarts == null || shoppingCarts.size() == 0){
-            throw new CustomException("购物车为空，不能下单");
-        }
-
         //查询用户数据
         User user = userService.getById(userId);
-        System.out.println(user);
-
-        System.out.println("-------------");
-        log.info("userid: {}", userId);
 
         //查询地址数据
         Long addressBookId = orders.getAddressBookId();
@@ -156,32 +84,40 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
             orderDetail.setImage(item.getImage());
             orderDetail.setAmount(item.getAmount());
             amount.addAndGet(item.getAmount().multiply(new BigDecimal(item.getNumber())).intValue());
+
             return orderDetail;
         }).collect(Collectors.toList());
 
-
+        //for(ShoppingCart shoppingCart:shoppingCarts){
+        //    amount.addAndGet(shoppingCart.getAmount().multiply(new BigDecimal(shoppingCart.getNumber())).intValue());
+        //}
         orders.setId(orderId);
         orders.setOrderTime(LocalDateTime.now());
         orders.setCheckoutTime(LocalDateTime.now());
-        orders.setStatus(2);
+        orders.setStatus(1);
         orders.setAmount(new BigDecimal(amount.get()));//总金额
         orders.setUserId(userId);
         orders.setNumber(String.valueOf(orderId));
         orders.setUserName(user.getName());
         orders.setConsignee(addressBook.getConsignee());
         orders.setPhone(addressBook.getPhone());
-        orders.setAddress((addressBook.getProvinceName() == null ? "" : addressBook.getProvinceName())
-                + (addressBook.getCityName() == null ? "" : addressBook.getCityName())
-                + (addressBook.getDistrictName() == null ? "" : addressBook.getDistrictName())
-                + (addressBook.getDetail() == null ? "" : addressBook.getDetail()));
+        orders.setAddress((addressBook.getDetail() == null ? "" : addressBook.getDetail()));
         //向订单表插入数据，一条数据
         this.save(orders);
 
-        //向订单明细表插入数据，多条数据
+        //向订单明细表插入数据
         orderDetailService.saveBatch(orderDetails);
 
-        //清空购物车数据
-        shoppingCartService.remove(wrapper);
+        ////清空购物车数据
+        //shoppingCartService.remove(wrapper);
+
+        for(OrderDetail orderDetail: orderDetails){
+            Dish dish = dishService.getById(orderDetail.getDishId());
+            String key = "dish_" + dish.getCategoryId() + "_1";
+            redisTemplate.delete(key);
+            dish.setSaleNum(dish.getSaleNum() + orderDetail.getNumber());
+            dishService.updateById(dish);
+        }
 
         PayVo payVo = new PayVo();
         payVo.setBody(orders.getRemark());
@@ -189,7 +125,6 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Orders> implement
         payVo.setTotal_amount(amount.toString());
         payVo.setOut_trade_no(String.valueOf(orderId));
         return payVo;
-
     }
 
 

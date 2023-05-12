@@ -40,6 +40,7 @@ public class DishServiceImpl extends ServiceImpl<DishMapper,Dish> implements Dis
     @Transactional
     public void saveWithFlavor(DishDto dishDto) {
         //保存菜品的基本信息到菜品表dish
+        dishDto.setSaleNum(0);
         this.save(dishDto);
         Long dishId = dishDto.getId();//菜品id
         //菜品口味

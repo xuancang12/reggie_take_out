@@ -1,6 +1,7 @@
 package com.lywtakeout.takeout.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.lywtakeout.takeout.common.BaseContext;
 import com.lywtakeout.takeout.common.R;
 import com.lywtakeout.takeout.entity.User;
 import com.lywtakeout.takeout.service.UserService;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -100,6 +102,7 @@ public class UserController {
                 userService.save(user);
             }
             session.setAttribute("user",user.getId());
+            BaseContext.setCurrentId(user.getId());
 
             //如果用户登录成功，删除Redis缓存中的验证码
             redisTemplate.delete(phone);
@@ -107,5 +110,19 @@ public class UserController {
         }
         return R.error("登录失败");
     }
+
+    /**
+     * 用户退出
+     * @param request
+     * @return
+     */
+    @PostMapping("/loginout")
+    public R<String> logout(HttpServletRequest request){
+        //清理Session中保存的当前登录员工的id
+        BaseContext.setCurrentId(0l);
+        request.getSession().removeAttribute("user");
+        return R.success("退出成功");
+    }
+
 
 }

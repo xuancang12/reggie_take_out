@@ -83,7 +83,7 @@ public class CategoryController {
     }
 
     /**
-     * 根据条件查询分类数据
+     * 移动端获取分类数据根据条件查询分类数据
      * @param category
      * @return
      */

@@ -40,6 +40,7 @@ public class LoginCheckFilter implements Filter{
                 "/common/**",
                 "/user/sendMsg",
                 "/user/login",
+                "/paySuccess",
                 "/doc.html",
                 "/webjars/**",
                 "/swagger-resources",

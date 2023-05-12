@@ -25,8 +25,6 @@ spring:
     appcode: 3000ac3ba157442c820757068dbf0a5a
     templateId: CST_ptdie100
 
-  #支付宝沙箱环境
-#  notifyUrl:
 
 mybatis-plus:
   configuration:
@@ -37,4 +35,4 @@ mybatis-plus:
     db-config:
       id-type: ASSIGN_ID
 reggie:
-  path: D:\Reggie\img\
+  path: E:\takeout\img\

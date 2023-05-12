@@ -32,7 +32,8 @@ public class AlipayTemplate {
     public String alipay_public_key = "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAw8TR4S89QFgUmcbrNoZ9qQxnNh++OaT66IisJGPud2A5nEZnClQFH0hvczD0kqL8Xc3Fgkiy/2Mkxm1TOqjQ6sZCAnFNM8wlgFBxf7dZFFhSIRWAjVSomG0wXkEcKWuOeG+mxBZYT/ood10+F+5390HOys0gRFsNkQofI+n6tUJRKtzvge6WEF8/W3DOMR31vyr0DclODJexbQgPKPhL1toHMdg4pd5TQTUhT0BiBWylB7+lyk5Vv312fyK6U2Vp1K9+WRmGis6aqpk5rdYc+6AftZADe4Y3QOEr9ue4SAjEA2NilwIYcGmOual+I4vE0qkWX86Mhh5cdvV6KlcOWQIDAQAB";
     // 服务器[异步通知]页面路径  需http://格式的完整路径，不能加?id=123这类自定义参数，必须外网可以正常访问
     // 支付宝会悄悄的给我们发送一个请求，告诉我们支付成功的信息
-    public String notify_url = "http://localhost:8080/front/page/add-order.html";
+    public String notify_url = "http://syfmgj.natappfree.cc/paySuccess";
+
 
     // 页面跳转同步通知页面路径 需http://格式的完整路径，不能加?id=123这类自定义参数，必须外网可以正常访问
     //同步通知，支付成功，一般跳转到成功页
@@ -56,17 +57,12 @@ public class AlipayTemplate {
     public  String gatewayUrl = "https://openapi.alipaydev.com/gateway.do";
 
 
-    public String pay1(PayVo vo, HttpServletResponse response) throws AlipayApiException, IOException {
+    public String pay1(PayVo vo) throws AlipayApiException, IOException {
         AlipayClient alipayClient = new DefaultAlipayClient(AlipayConfig.gatewayUrl, app_id,merchant_private_key, FORMAT , charset, alipay_public_key, sign_type); //获得初始化的AlipayClient
         AlipayTradeWapPayRequest alipayRequest = new AlipayTradeWapPayRequest();//创建API对应的request
         alipayRequest.setReturnUrl(return_url);
         alipayRequest.setNotifyUrl(notify_url);//在公共参数中设置回跳和通知地址
-        //alipayRequest.setBizContent("{" +
-        //        " \"out_trade_no\":\"20150320010101002\"," +
-        //        " \"total_amount\":\"88.88\"," +
-        //        " \"subject\":\"Iphone6 16G\"," +
-        //        " \"product_code\":\"QUICK_WAP_PAY\"" +
-        //        " }");//填充业务参数
+
         //商户订单号，商户网站订单系统中唯一订单号，必填
         String out_trade_no = vo.getOut_trade_no();
         //付款金额，必填

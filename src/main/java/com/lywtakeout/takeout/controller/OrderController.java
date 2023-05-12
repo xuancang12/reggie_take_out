@@ -41,52 +41,56 @@ public class OrderController {
     @Autowired
     AlipayTemplate alipayTemplate;
 
+
     /**
-     * 用户下单
-     * @param orders
+     * 查询所有订单
+     * @param page
+     * @param pageSize
+     * @param number
+     * @param beginTime
+     * @param endTime
      * @return
      */
-    @PostMapping("/submit")
-    public R<String> submit(@RequestBody Orders orders, HttpSession session){
-        log.info("订单数据：{}",orders);
-        orderService.submit(orders, session);
-        return R.success("下单成功");
-    }
-
-
-
-
     @GetMapping("/page")
     public R<Page> page(int page, int pageSize, String number, String beginTime, String endTime){
-        //log.info("page = {},pageSize = {},name = {}" ,page,pageSize);
-        //
-        ////构造分页构造器
-        //Page pageInfo = new Page(page,pageSize);
-        //
-        ////构造条件构造器
-        //LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper();
-        ////添加排序条件
-        //queryWrapper.orderByDesc(Orders::getOrderTime);
-        //
-        ////执行查询
-        //orderService.page(pageInfo,queryWrapper);
-        //
-        //return R.success(pageInfo);
-
-
         //分页构造器对象
         Page<Orders> pageInfo = new Page<>(page,pageSize);
+        Page<OrderDto> pageDto = new Page<>(page,pageSize);
         //构造条件查询对象
         LambdaQueryWrapper<Orders> queryWrapper = new LambdaQueryWrapper<>();
 
-        //添加查询条件  动态sql  字符串使用StringUtils.isNotEmpty这个方法来判断
-        //这里使用了范围查询的动态SQL，这里是重点！！！
+        //添加查询条件  动态sql 字符串使用StringUtils.isNotEmpty这个方法来判断
+        //使用范围查询的动态SQL
         queryWrapper.like(number!=null,Orders::getNumber,number)
                 .gt(StringUtils.isNotEmpty(beginTime),Orders::getOrderTime,beginTime)
                 .lt(StringUtils.isNotEmpty(endTime),Orders::getOrderTime,endTime);
-
+        queryWrapper.orderByDesc(Orders::getOrderTime);
         orderService.page(pageInfo,queryWrapper);
-        return R.success(pageInfo);
+
+        //通过OrderId查询对应的OrderDetail
+        LambdaQueryWrapper<OrderDetail> queryWrapper2 = new LambdaQueryWrapper<>();
+
+        //对OrderDto进行需要的属性赋值
+        List<Orders> records = pageInfo.getRecords();
+        List<OrderDto> orderDtoList = records.stream().map((item) ->{
+            OrderDto orderDto = new OrderDto();
+            //此时的orderDto对象里面orderDetails属性还是空 下面准备为它赋值
+            Long orderId = item.getId();//获取订单id
+            List<OrderDetail> orderDetailList = this.getOrderDetailListByOrderId(orderId);
+            StringBuilder dishName = new StringBuilder();
+            for(OrderDetail orderDetail: orderDetailList){
+                 dishName.append(orderDetail.getName() + ":菜品份额:" + orderDetail.getNumber());
+            }
+            BeanUtils.copyProperties(item,orderDto);
+            //对orderDto进行OrderDetails属性的赋值
+            orderDto.setOrderDetails(orderDetailList);
+            orderDto.setDishName(dishName.toString());
+            return orderDto;
+        }).collect(Collectors.toList());
+
+        BeanUtils.copyProperties(pageInfo,pageDto,"records");
+        pageDto.setRecords(orderDtoList);
+        return R.success(pageDto);
     }
 
 
@@ -158,14 +162,13 @@ public class OrderController {
             return orderDto;
         }).collect(Collectors.toList());
 
-        //使用dto的分页有点难度.....需要重点掌握
         BeanUtils.copyProperties(pageInfo,pageDto,"records");
         pageDto.setRecords(orderDtoList);
         return R.success(pageDto);
     }
 
 
-    //客户端点击再来一单
+
     /**
      * 前端点击再来一单是直接跳转到购物车的，所以为了避免数据有问题，再跳转之前我们需要把购物车的数据给清除
      * ①通过orderId获取订单明细
@@ -218,4 +221,6 @@ public class OrderController {
 
         return R.success("操作成功");
     }
+
+
 }

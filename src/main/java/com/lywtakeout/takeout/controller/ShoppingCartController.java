@@ -73,6 +73,35 @@ public class ShoppingCartController {
     }
 
     /**
+     * 减少菜品份额
+     * @param shoppingCart
+     * @return
+     */
+    @PostMapping("/sub")
+    public R<ShoppingCart> sub(@RequestBody ShoppingCart shoppingCart){
+        Long dishId = shoppingCart.getDishId();
+        LambdaQueryWrapper<ShoppingCart> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if(dishId != null){
+            // 此时为dish 需判断数量， 为1 直接删除
+            lambdaQueryWrapper.eq(ShoppingCart::getDishId,dishId);
+            lambdaQueryWrapper.eq(ShoppingCart::getUserId,BaseContext.getCurrentId());
+            ShoppingCart one = shoppingCartService.getOne(lambdaQueryWrapper);
+            Integer number = one.getNumber();
+            number -= 1;
+            one.setNumber(number);
+            shoppingCartService.updateById(one);
+            if(number <= 0){
+                shoppingCartService.remove(lambdaQueryWrapper);
+
+            }
+            return R.success(one);
+
+        }else{
+            return null;
+        }
+    }
+
+    /**
      * 查看购物车
      * @return
      */

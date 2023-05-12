@@ -7,6 +7,7 @@ import com.lywtakeout.takeout.dto.DishDto;
 import com.lywtakeout.takeout.entity.Category;
 import com.lywtakeout.takeout.entity.Dish;
 import com.lywtakeout.takeout.entity.DishFlavor;
+import com.lywtakeout.takeout.entity.SetmealDish;
 import com.lywtakeout.takeout.service.CategoryService;
 import com.lywtakeout.takeout.service.DishFlavorService;
 import com.lywtakeout.takeout.service.DishService;
@@ -140,6 +141,7 @@ public class DishController {
     }
 
     /**
+     * 数据回显
      * 根据id查询菜品信息和对应的口味信息
      * @param id
      * @return
@@ -175,26 +177,10 @@ public class DishController {
     }
 
     /**
-     * 根据条件查询对应的菜品数据
+     * 移动端获取菜品数据根据条件查询对应的菜品数据
      * @param dish
      * @return
      */
-    /*@GetMapping("/list")
-    public R<List<Dish>> list(Dish dish){
-        //构造查询条件
-        LambdaQueryWrapper<Dish> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(dish.getCategoryId() != null ,Dish::getCategoryId,dish.getCategoryId());
-        //添加条件，查询状态为1（起售状态）的菜品
-        queryWrapper.eq(Dish::getStatus,1);
-
-        //添加排序条件
-        queryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
-
-        List<Dish> list = dishService.list(queryWrapper);
-
-        return R.success(list);
-    }*/
-
     @GetMapping("/list")
     public R<List<DishDto>> list(Dish dish){
         List<DishDto> dishDtoList = null;
@@ -256,9 +242,9 @@ public class DishController {
     // * @return
     // */
     //@GetMapping("/{id}")
-    //public R<List<DishDto>> dish(@PathVariable("id") Long SetmealId){
+    //public R<List<DishDto>> dish(@PathVariable("id") Long setmealId){
     //    LambdaQueryWrapper<SetmealDish> queryWrapper = new LambdaQueryWrapper<>();
-    //    queryWrapper.eq(SetmealDish::getSetmealId,SetmealId);
+    //    queryWrapper.eq(SetmealDish::getSetmealId,setmealId);
     //    //获取套餐里面的所有菜品  这个就是SetmealDish表里面的数据
     //    List<SetmealDish> list = setmealDishService.list(queryWrapper);
     //
@@ -270,10 +256,8 @@ public class DishController {
     //        Long dishId = setmealDish.getDishId();
     //        Dish dish = dishService.getById(dishId);
     //        BeanUtils.copyProperties(dish, dishDto);
-    //
     //        return dishDto;
     //    }).collect(Collectors.toList());
-    //
     //    return R.success(dishDtos);
     //}
 

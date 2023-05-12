@@ -44,7 +44,7 @@
                             </div>
                         </div>
                         <div class="result">
-                            <span>共{{order.sumNum}} 件商品,实付</span><span class="price">￥{{order.amount}}</span>
+                            <span>共{{order.sumNum}} 件商品,总价</span><span class="price">￥{{order.amount}}</span>
                         </div>
                         <div class="btn" v-if="order.status === 4">
                             <div class="btnAgain" @click="addOrderAgain(order)">再来一单</div>
@@ -144,7 +144,7 @@
                     let str = ''
                     switch(status){
                         case 1:
-                            str =  '待付款'
+                            str =  '付款失败'
                         break;
                         case 2:
                             str =  '正在派送'
